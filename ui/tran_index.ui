@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>862</width>
+    <height>650</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MarkDown标题生成器</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <item>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLineEdit" name="txt_folder_patch"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btn_sel_folder">
+          <property name="text">
+           <string>选择目录</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="btnSearchFiles">
+          <property name="text">
+           <string>搜索文件</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="tb_datas">
+        <property name="showGrid">
+         <bool>true</bool>
+        </property>
+        <property name="sortingEnabled">
+         <bool>false</bool>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="rowCount">
+         <number>0</number>
+        </property>
+        <property name="columnCount">
+         <number>0</number>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QWidget" name="widget" native="true">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="layoutDirection">
+       <enum>Qt::LeftToRight</enum>
+      </property>
+      <property name="autoFillBackground">
+       <bool>false</bool>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <widget class="QTextEdit" name="txt_soure">
+           <property name="documentTitle">
+            <string/>
+           </property>
+           <property name="acceptRichText">
+            <bool>false</bool>
+           </property>
+           <property name="placeholderText">
+            <string>选择文件后读取源文本</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QPushButton" name="btn_fy">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="layoutDirection">
+              <enum>Qt::RightToLeft</enum>
+             </property>
+             <property name="text">
+              <string>翻译</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="btn_save">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>保存</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QTextEdit" name="txt_rz">
+           <property name="acceptRichText">
+            <bool>false</bool>
+           </property>
+           <property name="placeholderText">
+            <string>点击翻译后的结果</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>862</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>btn_fy</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>tran_en()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>653</x>
+     <y>333</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>363</x>
+     <y>406</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btnSearchFiles</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>seach_files()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>535</x>
+     <y>37</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>402</x>
+     <y>-52</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_sel_folder</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>sel_folder()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>452</x>
+     <y>43</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>318</x>
+     <y>-89</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>tb_datas</sender>
+   <signal>cellDoubleClicked(int,int)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>openfile(int,int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>116</x>
+     <y>493</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>115</x>
+     <y>692</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_save</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>save_file()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>781</x>
+     <y>332</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>943</x>
+     <y>339</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>tran_en()</slot>
+  <slot>sel_folder()</slot>
+  <slot>seach_files()</slot>
+  <slot>openfile(int,int)</slot>
+  <slot>save_file()</slot>
+ </slots>
+</ui>
