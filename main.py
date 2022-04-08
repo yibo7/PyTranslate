@@ -1,19 +1,19 @@
-import io
 import os
-import re
-import traceback
-
-from PySide6 import QtGui
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QHeaderView, QAbstractItemView, \
+from PySide6.QtWidgets import QApplication, QMainWindow,  QHeaderView, QAbstractItemView, \
     QTableWidget, QTableWidgetItem
 import sys
+from XsCore import XsStrings, XsRegexUtils, XsDialogs
+from XsCore.XsFso import FileUtils, XsFileList
 from googletrans import Translator
 
+from src.TranslateUtils import autoTran
 from ui.tran_index import Ui_MainWindow
 
 
 class IndexWindow(QMainWindow):
+    files = []
+    current_sel_path = ''
+    isChange = False # 搜索到文件后是否同时翻译
 
     def __init__(self):
         super(IndexWindow, self).__init__()
@@ -42,13 +42,13 @@ class IndexWindow(QMainWindow):
         # 表格头的显示与隐藏
         # self.ui.tb_datas.verticalHeader().setVisible(False)
         # self.ui.tb_datas.horizontalHeader().setVisible(False)
+
     def save_file(self):
         txtHtml = self.ui.txt_rz.toPlainText()
-        if self.current_sel_path != '':
-            file = open(self.current_sel_path, mode='w', encoding="utf8")
-            file.write(txtHtml)
-            # 关闭打开的文件
-            file.close()
+        if txtHtml.strip() == '':
+            XsDialogs.showInfo('没有可保存的内容！')
+            return
+        FileUtils.writeFile(self.current_sel_path, txtHtml)
         print("已保存:", self.current_sel_path)
 
     def tran_en(self):
@@ -62,10 +62,15 @@ class IndexWindow(QMainWindow):
         ])
         txtS = self.ui.txt_soure.toPlainText()
         # 提取字符串里的中文，返回数组
-        pattern = "[\u4e00-\u9fa5]+"
-        regex = re.compile(pattern)
-        results = regex.findall(txtS)
+        pattern = r"[\u4e00-\u9fa5]+"
+        results = XsRegexUtils.FindStrToList(pattern, txtS)
+
+        if results is None:
+            XsDialogs.showInfo('没有得取到中文')
+            return
+
         new_list = list(set(results))
+
         new_list.sort(key=lambda i: len(i), reverse=True)
         print(new_list)
 
@@ -77,12 +82,25 @@ class IndexWindow(QMainWindow):
         self.ui.txt_rz.setPlainText(txtS)
 
     def sel_folder(self):
-        # file_path, _ = QFileDialog.getOpenFileName(self, "open file dialog", "", "Txt files(*.md)")
-        file_path = QFileDialog.getExistingDirectory(self, "选择文件夹", "/")
+        file_path = XsDialogs.askOpenFolder()  # QFileDialog.getExistingDirectory(self, "选择文件夹", "/")
         self.ui.txt_folder_patch.setText(file_path)
-        # file = open(file_path, mode='r', encoding="utf8")
-        # data = file.read()
-        # self.ui.txtSoure.setText(data)
+
+    currentItemCount = 0
+
+    def __callBackFile(self, src):
+        if src == '--end--':
+            self.ui.btnSearchFiles.setEnabled(True)
+            self.ui.btnSearchFiles.setText("搜索文件")
+            return
+        self.files.append(src)  # 方便读取，所以保存
+        self.ui.tb_datas.setRowCount(self.currentItemCount + 1)
+        fileName = os.path.basename(src)  # 带后缀的文件名
+        # 往列表添加一行
+        self.ui.tb_datas.setItem(self.currentItemCount, 0, QTableWidgetItem(fileName))
+        self.ui.tb_datas.setItem(self.currentItemCount, 1, QTableWidgetItem(src))
+        self.currentItemCount += 1
+        if self.isChange :
+            autoTran(src)
 
     def seach_files(self):
         '''
@@ -91,62 +109,28 @@ class IndexWindow(QMainWindow):
         '''
         self.ui.tb_datas.clearContents()  # 清空所有数据
         self.files.clear()
-        sParentPath = self.ui.txt_folder_patch.text()
-        self.scanFiles(sParentPath, ['.ftl'])
-        if(len(self.files)) > 0:
-            self.ui.tb_datas.setRowCount(len(self.files))
-            itemIndex = 0
-            for item in self.files:
-                # self.testddd(item)
-                fileName = os.path.basename(item)  # 带后缀的文件名
-                self.ui.tb_datas.setItem(itemIndex, 0, QTableWidgetItem(fileName))
-                self.ui.tb_datas.setItem(itemIndex, 1, QTableWidgetItem(item))
-                itemIndex += 1
+        sParentPath = self.ui.txt_folder_patch.text().strip()
+        if sParentPath == '':
+            XsDialogs.showInfo('请选择一个正确的目录')
+            return
 
-    def testddd(self, path):
-        # file = open(path, mode='w', encoding="utf8")
-        # file_content = file.read()  # data 是读取到的结果
-        # 设置Google翻译服务地址
-        translator = Translator(service_urls=[
-            'translate.google.cn'
-        ])
-        with open(path, "r", encoding="utf-8") as fr:
-            file_content = fr.read()  # data 是读取到的结果
-            # 提取字符串里的中文，返回数组
-            pattern = "[\u4e00-\u9fa5]+"
-            regex = re.compile(pattern)
-            results = regex.findall(file_content)
-            new_list = list(set(results))
-            new_list.sort(key=lambda i: len(i), reverse=True)
-            print(new_list)
+        hz = self.ui.txtHz.text().strip()
+        if hz == '':
+            XsDialogs.showInfo("请输入至少一个文件后缀，多个用逗号分开")
+            return
 
-            for kw in new_list:
-                translation = translator.translate(kw, dest='en')  # dest='zh-CN'
-                print(kw, ":", translation.text)
-                file_content = file_content.replace(kw, translation.text)
+        self.isChange = self.ui.cbIsFy.isChecked()
 
-            with open(path, "w", encoding="utf-8") as fw:
-                fw.write(file_content)
-                print("已保存:", path)
+        if self.isChange :
+            isck = XsDialogs.askAskYesNo("您选择了翻译意味着搜索到文件的同时会覆盖成翻译后的文件，请确认你已经做好了原文件的备份了吗？")
+            if isck is False:
+                return
 
-    files = []
-    current_sel_path = ''
-
-    def scanFiles(self, path, fixs):
-        '''
-        扫描指定目录下的文件，可无限递归子目录
-        :param path:指定目录
-        :param fixs:指定只扫描的文件类型，数组类型, 比如 ['.txt', '.png']
-        :return:
-        '''
-        parents = os.listdir(path)
-        for parent in parents:
-            child = os.path.join(path, parent)
-            if os.path.isdir(child):
-                self.scanFiles(child, fixs)
-            else:
-                if child[-4:] in fixs:
-                    self.files.append(child)
+        self.ui.btnSearchFiles.setEnabled(False)
+        self.ui.btnSearchFiles.setText("搜索中..")
+        self.currentItemCount = 0
+        xsFl = XsFileList(sParentPath, XsStrings.split(hz, ","))
+        xsFl.getSubFilesAsync(self.__callBackFile)
 
     def openfile(self, row_index, col_index):
         '''
@@ -156,13 +140,11 @@ class IndexWindow(QMainWindow):
         :return:
         '''
         self.current_sel_path = self.files[row_index]
-        file = open(self.current_sel_path, mode='r', encoding="utf8")
-        file_content = file.read()  # data 是读取到的结果
+        file_content = FileUtils.readFileAnyCode(self.current_sel_path)  # file.read()  # data 是读取到的结果
         # 赋值给源文本框
         self.ui.txt_soure.setPlainText(file_content)
         # 清空翻译结果的文本框
         self.ui.txt_rz.clear()
-        file.close()
 
 
 if __name__ == '__main__':

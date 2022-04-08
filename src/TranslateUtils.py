@@ -13,7 +13,7 @@ def autoTran(path):
         translator = Translator(service_urls=[
             'translate.google.cn'
         ])
-        file_content =  XsFso.readFileAnyCode(path)
+        file_content = XsFso.readFileAnyCode(path)
         # 提取字符串里的中文，返回数组
         pattern = "[\u4e00-\u9fa5]+"
         regex = re.compile(pattern)
@@ -29,5 +29,6 @@ def autoTran(path):
 
         XsFso.writeFile(path,file_content)
         print("已保存:", path)
+
 
 
